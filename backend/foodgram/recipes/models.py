@@ -27,17 +27,17 @@ class Ingredient(models.Model):
 class Recipe(models.Model):
     ingredients = models.ForeignKey(
         Ingredient, on_delete=models.SET_NULL,
-        related_name='recipes', blank=True, null=True
+        related_name='recipes'
     )
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='recipes'
     )
     tags = models.ForeignKey(
         Tag, on_delete=models.SET_NULL,
-        related_name='recipes', blank=True, null=True
+        related_name='recipes'
     )
     image = models.ImageField(
-        upload_to='recipes/', null=True, blank=True
+        upload_to='recipes/'
     )
     name = models.CharField(max_length=200)
     text = models.TextField()
@@ -47,30 +47,33 @@ class Recipe(models.Model):
         return self.text
 
 
-class Comment(models.Model):
-    author = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='comments'
-    )
-    recipe = models.ForeignKey(
-        Recipe, on_delete=models.CASCADE, related_name='comments'
-    )
-    text = models.TextField()
-    created = models.DateTimeField(
-        'Дата добавления', auto_now_add=True, db_index=True
-    )
-
-
-class Follow(models.Model):
+class Subscribe(models.Model):
     user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="follower"
+        User, on_delete=models.CASCADE, related_name="subscriber"
     )
-    following = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="following"
+    subscribing = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="subscribing"
     )
 
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["user", "following"], name="unique_follow"
+                fields=["user", "subscribing"], name="unique_subscribe"
+            )
+        ]
+
+
+class Favorite(models.Model):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE
+    )
+    recipe = models.ForeignKey(
+        Recipe, on_delete=models.CASCADE
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "recipe"], name="unique_favorite"
             )
         ]
