@@ -1,0 +1,13 @@
+GET  http://localhost/api/users/
+
+###
+POST   http://localhost/api/users/
+Content-Type: application/json
+
+{
+  "email": "vpupkin@yandex.ru",
+  "username": "vasya.pupkin",
+  "first_name": "Вася",
+  "last_name": "Пупкин",
+  "password": "Qwerty123"
+}

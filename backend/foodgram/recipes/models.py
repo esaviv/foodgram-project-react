@@ -12,7 +12,9 @@ class Tag(models.Model):
     )
     slug = models.SlugField(
         unique=True,
-        error_messages={'unique': 'Тег с этим слагом уже существует.'}
+        error_messages={
+            'unique': 'Тег с этим слагом уже существует.'
+        }
     )
 
     def __str__(self):
@@ -20,24 +22,22 @@ class Tag(models.Model):
 
 
 class Ingredient(models.Model):
-    name = models.CharField()
-    measurement_unit = models.CharField()
+    name = models.CharField(max_length=64)
+    measurement_unit = models.CharField(max_length=12)
 
 
 class Recipe(models.Model):
-    ingredients = models.ForeignKey(
-        Ingredient, on_delete=models.SET_NULL,
-        related_name='recipes'
+    ingredients = models.ManyToManyField(
+        Ingredient, through='IngredientRecipe'
     )
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='recipes'
     )
-    tags = models.ForeignKey(
-        Tag, on_delete=models.SET_NULL,
-        related_name='recipes'
+    tags = models.ManyToManyField(
+        Tag, through='TagsRecipe'
     )
     image = models.ImageField(
-        upload_to='recipes/'
+        upload_to='recipes/images/'
     )
     name = models.CharField(max_length=200)
     text = models.TextField()
@@ -47,20 +47,29 @@ class Recipe(models.Model):
         return self.text
 
 
-class Subscribe(models.Model):
-    user = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="subscriber"
+class IngredientRecipe(models.Model):
+    ingredient = models.ForeignKey(
+        Ingredient, on_delete=models.CASCADE
     )
-    subscribing = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="subscribing"
+    recipe = models.ForeignKey(
+        Recipe, on_delete=models.CASCADE
+    )
+    amount = models.PositiveIntegerField()
+
+    def __str__(self):
+        return f'{self.ingredient} {self.recipe}'
+
+
+class TagRecipe(models.Model):
+    tag = models.ForeignKey(
+        Tag, on_delete=models.CASCADE
+    )
+    recipe = models.ForeignKey(
+        Recipe, on_delete=models.CASCADE
     )
 
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=["user", "subscribing"], name="unique_subscribe"
-            )
-        ]
+    def __str__(self):
+        return f'{self.tag} {self.recipe}'
 
 
 class Favorite(models.Model):
@@ -74,6 +83,22 @@ class Favorite(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["user", "recipe"], name="unique_favorite"
+                fields=['user', 'recipe'], name='unique_favorite'
+            )
+        ]
+
+
+class Subscribe(models.Model):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='subscriber'
+    )
+    subscribing = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='subscribing'
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'subscribing'], name='unique_subscribe'
             )
         ]
