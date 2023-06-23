@@ -34,14 +34,14 @@ class Recipe(models.Model):
         User, on_delete=models.CASCADE, related_name='recipes'
     )
     tags = models.ManyToManyField(
-        Tag, through='TagsRecipe'
+        Tag, through='TagRecipe'
     )
     image = models.ImageField(
         upload_to='recipes/images/'
     )
     name = models.CharField(max_length=200)
     text = models.TextField()
-    cooking_time = models.IntegerField(min=1)
+    cooking_time = models.PositiveIntegerField()
 
     def __str__(self):
         return self.text
@@ -100,5 +100,21 @@ class Subscribe(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'subscribing'], name='unique_subscribe'
+            )
+        ]
+
+
+class ShoppingCard(models.Model):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE
+    )
+    recipe = models.ForeignKey(
+        Recipe, on_delete=models.CASCADE
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'recipe'], name='unique_shopping_card'
             )
         ]
