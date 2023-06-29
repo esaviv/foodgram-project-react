@@ -43,19 +43,31 @@ class UsersViewSet(ModelViewSet):
     """
     queryset = User.objects.all()
     serializer_class = UsersSerializer
-    lookup_field = 'username'
     filter_backends = (SearchFilter,)
-    search_fields = ('id',)
+    search_fields = ('username',)
     http_method_names = ('get', 'post')
+
+    def perform_create(self, serializer):
+        serializer.save(password=self.request.data.get('password')) 
 
     @action(
         methods=['get'], detail=False,
         url_path='me', permission_classes=(SelfEditUserOnlyPermission,)
     )
-    def me_user(self, request):
+    def get_me(self, request):
         user = get_object_or_404(
-            User, id=request.id
+            User, username=request.user
         )
-        print(request)
         serializer = self.get_serializer(user)
         return Response(serializer.data)
+
+    @action(
+        methods=['post'], detail=False,
+        url_path='set_password', permission_classes=(SelfEditUserOnlyPermission,)
+    )
+    def set_password(self, request):
+        user = get_object_or_404(
+            User, username=request.user
+        )
+        if str(user.password) == request.data.get('current_password'):
+            ...

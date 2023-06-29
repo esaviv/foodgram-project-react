@@ -3,32 +3,42 @@ POST   http://localhost:8000/api/auth/token/login/
 Content-Type: application/json
 
 {
-  "password": "test1",
+  "password": "Qwerty123",
   "email": "test1@yandex.ru"
+}
+
+###
+POST http://localhost:8000/api/users/set_password/
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjg4MTU5Mzg4LCJqdGkiOiIyNDllN2JmYjkxYTY0OTlkODlkODk1NzM3MTIzMmQxMSIsInVzZXJfaWQiOjJ9.PGbC7uj5npV1NucYtNGsnXP_qyT2eb8VpW7KsNB1XD4
+
+{
+  "new_password": "vdgpz123",
+  "current_password": "Qwerty123"
 }
 
 ###
 GET http://localhost:8000/api/users/
 
 ###
-GET http://localhost:8000/api/users/2/
+GET http://localhost:8000/api/users/1/
 
 ###
-GET http://localhost:8000/api/users/Test1/
+GET http://localhost:8000/api/users/vasya/
 
 ###
 GET http://localhost:8000/api/users/me/
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjg4MDMzMzIwLCJqdGkiOiJiZDJiZDM4YTVlMGU0YWYzYTIwYzAxMmY2ZGMwOWI3NCIsInVzZXJfaWQiOjJ9.svohrUxDX32wVHoSidWxeh2qM1ajtFegbz0NbpZpLjA
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjg4MTU1OTgxLCJqdGkiOiIzMTMwMGY4ZTBmYjA0Zjk0ODlmN2E1NzRmNmJlZmVjMiIsInVzZXJfaWQiOjF9._otu_uqUXSbBMCd7B0IjLViC5wmGeYvwf7XOctOUBo8
 
 ###
 POST http://localhost:8000/api/users/
 Content-Type: application/json
 
 {
-  "email": "vpupkin@yandex.ru",
-  "username": "vasya",
-  "first_name": "Вася",
-  "last_name": "Пупкин",
+  "email": "test1@yandex.ru",
+  "username": "test1",
+  "first_name": "Test1",
+  "last_name": "Test1",
   "password": "Qwerty123"
 }
 
