@@ -8,7 +8,7 @@ services:
     env_file: ./.env
     
   backend:
-    image: esaviv/foodgram_backend
+    build: ../backend/
     restart: always
     volumes:
       - static_value:/app/static/
@@ -18,7 +18,7 @@ services:
     env_file: ./.env
 
   frontend:
-    image: esaviv/foodgram_frontend
+    build: ../frontend/
     volumes:
       - ../frontend/:/app/result_build/
     depends_on:
