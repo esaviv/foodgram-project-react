@@ -3,18 +3,18 @@ POST   http://localhost:8000/api/auth/token/login/
 Content-Type: application/json
 
 {
-  "password": "Qwerty123",
+  "password": "Vdgpz123",
   "email": "test1@yandex.ru"
 }
 
 ###
 POST http://localhost:8000/api/users/set_password/
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjg4MTU5Mzg4LCJqdGkiOiIyNDllN2JmYjkxYTY0OTlkODlkODk1NzM3MTIzMmQxMSIsInVzZXJfaWQiOjJ9.PGbC7uj5npV1NucYtNGsnXP_qyT2eb8VpW7KsNB1XD4
+Authorization: Token 6eb974c757af6cd78c7c31024ab5d9d29b4d9bfd
 
 {
-  "new_password": "vdgpz123",
-  "current_password": "Qwerty123"
+  "new_password": "Yanesb2022",
+  "current_password": "yaensb_2022"
 }
 
 ###
@@ -22,13 +22,14 @@ GET http://localhost:8000/api/users/
 
 ###
 GET http://localhost:8000/api/users/1/
+Authorization: Token 6eb974c757af6cd78c7c31024ab5d9d29b4d9bfd
 
 ###
 GET http://localhost:8000/api/users/vasya/
 
 ###
 GET http://localhost:8000/api/users/me/
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjg4MTU1OTgxLCJqdGkiOiIzMTMwMGY4ZTBmYjA0Zjk0ODlmN2E1NzRmNmJlZmVjMiIsInVzZXJfaWQiOjF9._otu_uqUXSbBMCd7B0IjLViC5wmGeYvwf7XOctOUBo8
+Authorization: Token 6eb974c757af6cd78c7c31024ab5d9d29b4d9bfd
 
 ###
 POST http://localhost:8000/api/users/
@@ -39,6 +40,8 @@ Content-Type: application/json
   "username": "test1",
   "first_name": "Test1",
   "last_name": "Test1",
-  "password": "Qwerty123"
+  "password": "Vdgpz123"
 }
 
+###
+GET http://localhost:8000/api/ingredients/

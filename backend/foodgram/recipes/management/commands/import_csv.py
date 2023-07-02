@@ -9,7 +9,7 @@ DATABASES_DICT = {
     Ingredient: 'ingredients.csv',
 }
 
-DATA_DIR = os.path.join(settings.BASE_DIR, 'data')
+DATA_DIR = os.path.join(settings.BASE_DIR, 'static', 'data')
 
 
 class Command(BaseCommand):
