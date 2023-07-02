@@ -5,7 +5,7 @@ services:
     image: postgres:13.0-alpine
     volumes:
       - db_data:/var/lib/postgresql/data/
-    env_file: ./.env
+    env_file: .env
     
   backend:
     image: esaviv/foodgram_backend
@@ -15,7 +15,7 @@ services:
       - media_value:/app/media/
     depends_on:
       - db
-    env_file: ./.env
+    env_file: .env
 
   frontend:
     image: esaviv/foodgram_frontend
