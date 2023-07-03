@@ -48,7 +48,7 @@ services:
       - ./certbot/www/:/var/www/certbot/:rw
       - ./certbot/conf/:/etc/letsencrypt/:rw
     depends_on:
-      nginx
+      - nginx
 
 volumes:
   static_value:
