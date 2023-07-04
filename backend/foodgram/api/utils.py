@@ -38,7 +38,7 @@ def create_ingredients(ingredients, recipe):
 
 def create_model_instance(request, instance, serializer_name):
     """Вспомогательная функция для добавления
-    рецепта в избранное либо список покупок.
+    рецепта в избранное или список покупок.
     """
     serializer = serializer_name(
         data={'user': request.user.id, 'recipe': instance.id, },
