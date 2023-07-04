@@ -7,16 +7,16 @@ from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
     list_display = ('pk', 'name', 'color', 'slug')
-    search_fields = ('name', 'color', 'slug')
     list_filter = ('name', 'color', 'slug')
+    search_fields = ('name', 'color', 'slug')
     empty_value_display = settings.EMPTY_VALUE
 
 
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
     list_display = ('pk', 'name', 'measurement_unit')
-    search_fields = ('name',)
     list_filter = ('name',)
+    search_fields = ('name',)
     empty_value_display = settings.EMPTY_VALUE
 
 
@@ -27,8 +27,8 @@ class RecipeIngredientInline(admin.TabularInline):
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     list_display = ('pk', 'name', 'author', 'favorites_amount')
-    search_fields = ('name', 'author')
     list_filter = ('name', 'author', 'tags')
+    search_fields = ('name', 'author')
     empty_value_display = settings.EMPTY_VALUE
     inlines = [
         RecipeIngredientInline,
