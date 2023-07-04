@@ -38,7 +38,10 @@ docker compose exec backend python manage.py createsuperuser
 
 Перейти по адресу http://localhost/admin/ - убедиться, что страница отображается корректно.
 
+Документация доступна по адресу:
+```
+http://localhost/api/docs/redoc.html
+```
+
 ### Автор
 esaviv
-
-
