@@ -1,30 +1,32 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+
+from foodgram.settings import EMAIL_MAX_LENGTH, USER_FIELDS_MAX_LENGTH
 from users.validators import validate_username
 
 
 class User(AbstractUser):
     email = models.EmailField(
         'Электронная почта',
-        max_length=254, unique=True, blank=False, null=False,
+        max_length=EMAIL_MAX_LENGTH, unique=True
     )
     username = models.CharField(
         'Имя пользователя',
-        max_length=150, unique=True, blank=False, null=False,
+        max_length=USER_FIELDS_MAX_LENGTH, unique=True,
         validators=[validate_username, ]
     )
     first_name = models.CharField(
-        'Имя', max_length=150, blank=False, null=False,
+        'Имя', max_length=USER_FIELDS_MAX_LENGTH
     )
     last_name = models.CharField(
-        'Фамилия', max_length=150, blank=False, null=False
+        'Фамилия', max_length=USER_FIELDS_MAX_LENGTH
     )
     password = models.CharField(
-        'Пароль', max_length=150, blank=False, null=False,
+        'Пароль', max_length=USER_FIELDS_MAX_LENGTH
     )
 
     class Meta:
-        ordering = ['id']
+        ordering = ['username']
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
 
@@ -47,10 +49,14 @@ class Subscription(models.Model):
             models.UniqueConstraint(
                 fields=['user', 'author'],
                 name='unique_user_author'
+            ),
+            models.CheckConstraint(
+                check=models.Q(user=models.F('author')),
+                name='check_user_not_author'
             )
         ]
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
 
     def __str__(self):
-        return f'{self.user.username} подписался на {self.author.username}'
+        return f'{self.user} подписался на {self.author}'

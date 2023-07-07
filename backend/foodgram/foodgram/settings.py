@@ -9,7 +9,7 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-SECRET_KEY = os.getenv('SECRET_KEY')
+SECRET_KEY = os.getenv('SECRET_KEY', 'false')
 
 DEBUG = bool(strtobool(os.getenv('DEBUG', 'false')))
 
@@ -63,13 +63,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'foodgram.wsgi.application'
 
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
 DATABASES = {
     'default': {
         'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
@@ -98,9 +91,9 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru-ru'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Moscow'
 
 USE_I18N = True
 
@@ -146,4 +139,10 @@ DJOSER = {
     }
 }
 
-EMPTY_VALUE = '-пусто-'
+EMPTY_VALUE = '-пустo-'
+
+EMAIL_MAX_LENGTH = 254
+USER_FIELDS_MAX_LENGTH = 150
+
+PROHIBITED_USERNAMES = ('me')
+VALID_CHARACTERS = r'^[\w.@+-]+$'
