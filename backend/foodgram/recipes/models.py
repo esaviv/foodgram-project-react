@@ -1,18 +1,21 @@
 from django.core.validators import MinValueValidator
 from django.db import models
 
+from foodgram.settings import (
+    RECIPES_FIELDS_MAX_LENGTH, SLUG_COLOR_MAX_LENGTH, TIME_AMOUNT
+)
 from users.models import User
 
 
 class Tag(models.Model):
     name = models.CharField(
-        'Название', max_length=200, unique=True
+        'Название', max_length=RECIPES_FIELDS_MAX_LENGTH, unique=True
     )
     color = models.CharField(
-        'Цвет', max_length=7, unique=True
+        'Цвет', max_length=SLUG_COLOR_MAX_LENGTH, unique=True
     )
     slug = models.SlugField(
-        'Слаг', max_length=200, unique=True
+        'Слаг', max_length=RECIPES_FIELDS_MAX_LENGTH, unique=True
     )
 
     class Meta:
@@ -25,10 +28,10 @@ class Tag(models.Model):
 
 class Ingredient(models.Model):
     name = models.CharField(
-        'Название', max_length=200,
+        'Название', max_length=RECIPES_FIELDS_MAX_LENGTH,
     )
     measurement_unit = models.CharField(
-        'Единица измерения', max_length=200,
+        'Единица измерения', max_length=RECIPES_FIELDS_MAX_LENGTH,
     )
 
     class Meta:
@@ -51,7 +54,7 @@ class Recipe(models.Model):
         related_name='recipes', verbose_name='Автор',
     )
     name = models.CharField(
-        'Название', max_length=200,
+        'Название', max_length=RECIPES_FIELDS_MAX_LENGTH,
     )
     image = models.ImageField(
         'Картинка', upload_to='recipes/',
@@ -70,7 +73,8 @@ class Recipe(models.Model):
         'Время приготовления',
         validators=[
             MinValueValidator(
-                1, 'Время приготовления должно быть больше 1 минуты.'
+                TIME_AMOUNT,
+                f'Время приготовления должно быть больше {TIME_AMOUNT} минуты.'
             )
         ]
     )
@@ -98,7 +102,8 @@ class RecipeIngredient(models.Model):
         'Количество',
         validators=[
             MinValueValidator(
-                1, 'Количество ингредиентов должно быть больше 1.'
+                TIME_AMOUNT,
+                f'Количество ингредиентов должно быть больше {TIME_AMOUNT}.'
             )
         ]
     )
