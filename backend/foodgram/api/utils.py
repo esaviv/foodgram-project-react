@@ -19,29 +19,25 @@ class Base64ImageField(serializers.ImageField):
 
 
 def create_ingredients(ingredients, recipe):
-    """Вспомогательная функция для добавления ингредиентов.
-    Используется при создании/редактировании рецепта."""
+    """Функция добавления ингредиентов при создании/редактировании рецепта."""
     ingredient_list = []
     for ingredient in ingredients:
-        current_ingredient = get_object_or_404(Ingredient,
-                                               id=ingredient.get('id'))
+        current_ingredient = get_object_or_404(
+            Ingredient, id=ingredient.get('id')
+        )
         amount = ingredient.get('amount')
         ingredient_list.append(
             RecipeIngredient(
-                recipe=recipe,
-                ingredient=current_ingredient,
-                amount=amount
+                recipe=recipe, ingredient=current_ingredient, amount=amount
             )
         )
     RecipeIngredient.objects.bulk_create(ingredient_list)
 
 
-def create_model_instance(request, instance, serializer_name):
-    """Вспомогательная функция для добавления
-    рецепта в избранное или список покупок.
-    """
+def create_model_instance(request, recipe_id, serializer_name):
+    """Функция для добавления рецепта в избранное или список покупок."""
     serializer = serializer_name(
-        data={'user': request.user.id, 'recipe': instance.id, },
+        data={'user': request.user.id, 'recipe': recipe_id},
         context={'request': request}
     )
     serializer.is_valid(raise_exception=True)
@@ -49,13 +45,8 @@ def create_model_instance(request, instance, serializer_name):
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-def delete_model_instance(request, model_name, instance, error_message):
-    """Вспомогательная функция для удаления рецепта
-    из избранного или из списка покупок.
-    """
-    if not model_name.objects.filter(user=request.user,
-                                     recipe=instance).exists():
-        return Response({'errors': error_message},
-                        status=status.HTTP_400_BAD_REQUEST)
-    model_name.objects.filter(user=request.user, recipe=instance).delete()
+def delete_model_instance(request, model, instance):
+    """Функция для удаления рецепта из избранного или из списка покупок."""
+    recipe = get_object_or_404(model, user=request.user, recipe=instance)
+    recipe.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)

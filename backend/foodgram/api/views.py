@@ -1,11 +1,3 @@
-from api.filters import IngredientFilter, RecipeFilter
-from api.permissions import IsAdminAuthorOrReadOnly
-from api.serializers import (FavoriteSerializer, IngredientSerializer,
-                             RecipeCreateSerializer, RecipeGetSerializer,
-                             ShoppingCartSerializer, TagSerialiser,
-                             UserSubscribeRepresentSerializer,
-                             UserSubscribeSerializer)
-from api.utils import create_model_instance, delete_model_instance
 from django.db.models import Sum
 from django.shortcuts import HttpResponse, get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -13,10 +5,21 @@ from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                             ShoppingCart, Tag)
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import (
+    AllowAny, IsAuthenticatedOrReadOnly, SAFE_METHODS
+)
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from users.models import Subscription, User
+
+from api.filters import IngredientFilter, RecipeFilter
+from api.permissions import IsOwnerOrReadOnly
+from api.serializers import (FavoriteSerializer, IngredientSerializer,
+                             RecipeCreateSerializer, RecipeGetSerializer,
+                             ShoppingCartSerializer, TagSerialiser,
+                             UserSubscribeRepresentSerializer,
+                             UserSubscribeSerializer)
+from api.utils import create_model_instance, delete_model_instance
 
 
 class UserSubscribeView(APIView):
@@ -33,19 +36,20 @@ class UserSubscribeView(APIView):
 
     def delete(self, request, user_id):
         author = get_object_or_404(User, id=user_id)
-        if not Subscription.objects.filter(user=request.user,
-                                           author=author).exists():
+        if not Subscription.objects.filter(
+            user=request.user, author=author
+        ).exists():
             return Response(
                 {'errors': 'Вы не подписаны на этого пользователя'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        Subscription.objects.get(user=request.user.id,
-                                 author=user_id).delete()
+        Subscription.objects.get(user=request.user.id, author=user_id).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class UserSubscriptionsViewSet(mixins.ListModelMixin,
-                               viewsets.GenericViewSet):
+class UserSubscriptionsViewSet(
+    mixins.ListModelMixin, viewsets.GenericViewSet
+):
     """Получение списка всех подписок на пользователей."""
     serializer_class = UserSubscribeRepresentSerializer
 
@@ -78,58 +82,31 @@ class RecipeViewSet(viewsets.ModelViewSet):
     Отправка файла со списком рецептов.
     """
     queryset = Recipe.objects.all()
-    permission_classes = (IsAdminAuthorOrReadOnly, )
+    permission_classes = (IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly)
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
     http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_serializer_class(self):
-        if self.action in ('list', 'retrieve'):
+        if self.action in SAFE_METHODS:
             return RecipeGetSerializer
         return RecipeCreateSerializer
 
-    @action(
-        detail=True,
-        methods=['post', 'delete'],
-        permission_classes=[IsAuthenticated, ]
-    )
+    @action(detail=True, methods=['post', 'delete'])
     def favorite(self, request, pk):
-        """Работа с избранными рецептами.
-        Удаление/добавление в избранное.
-        """
-        recipe = get_object_or_404(Recipe, id=pk)
+        """Удаление/добавление в избранное."""
         if request.method == 'POST':
-            return create_model_instance(request, recipe, FavoriteSerializer)
+            return create_model_instance(request, pk, FavoriteSerializer)
+        return delete_model_instance(request, Favorite, pk)
 
-        if request.method == 'DELETE':
-            error_message = 'У вас нет этого рецепта в избранном'
-            return delete_model_instance(request, Favorite,
-                                         recipe, error_message)
-
-    @action(
-        detail=True,
-        methods=['post', 'delete'],
-        permission_classes=[IsAuthenticated, ]
-    )
+    @action(detail=True, methods=['post', 'delete'])
     def shopping_cart(self, request, pk):
-        """Работа со списком покупок.
-        Удаление/добавление в список покупок.
-        """
-        recipe = get_object_or_404(Recipe, id=pk)
+        """Удаление/добавление в список покупок."""
         if request.method == 'POST':
-            return create_model_instance(request, recipe,
-                                         ShoppingCartSerializer)
+            return create_model_instance(request, pk, ShoppingCartSerializer)
+        return delete_model_instance(request, ShoppingCart, pk)
 
-        if request.method == 'DELETE':
-            error_message = 'У вас нет этого рецепта в списке покупок'
-            return delete_model_instance(request, ShoppingCart,
-                                         recipe, error_message)
-
-    @action(
-        detail=False,
-        methods=['get'],
-        permission_classes=[IsAuthenticated, ]
-    )
+    @action(detail=False, methods=['get'])
     def download_shopping_cart(self, request):
         """Отправка файла со списком покупок."""
         ingredients = RecipeIngredient.objects.filter(
@@ -144,6 +121,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             amount = ingredient['ingredient_amount']
             shopping_list.append(f'\n{name} - {amount}, {unit}')
         response = HttpResponse(shopping_list, content_type='text/plain')
-        response['Content-Disposition'] = \
+        response['Content-Disposition'] = (
             'attachment; filename="shopping_cart.txt"'
+        )
         return response
