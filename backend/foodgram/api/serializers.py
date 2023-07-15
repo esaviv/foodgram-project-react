@@ -1,9 +1,12 @@
-from api.utils import Base64ImageField, create_ingredients
+
 from django.db import transaction
+from django.shortcuts import get_object_or_404
 from djoser.serializers import UserCreateSerializer, UserSerializer
+from drf_base64.fields import Base64ImageField
+from rest_framework import serializers
+
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                             ShoppingCart, Tag)
-from rest_framework import serializers
 from users.models import Subscription, User
 
 
@@ -24,17 +27,15 @@ class UserGetSerializer(UserSerializer):
         fields = ('email', 'id', 'username', 'first_name',
                   'last_name', 'is_subscribed')
 
-    def get_is_subscribed(self, obj):
-        request = self.context['request']
-        return Subscription.objects.filter(
-            user=request.user, author=obj
-        ).exists()
+    def get_is_subscribed(self, author):
+        user = self.context['request'].user
+        return user.follower.filter(author=author).exists()
 
 
 class UserSubscribeRepresentSerializer(UserGetSerializer):
     """"Предоставление информации о подписках пользователя."""
     recipes = serializers.SerializerMethodField()
-    recipes_count = serializers.SerializerMethodField()
+    recipes_count = serializers.IntegerField(source='recipes.count', read_only=True)
 
     class Meta:
         model = User
@@ -52,29 +53,27 @@ class UserSubscribeRepresentSerializer(UserGetSerializer):
         return RecipeSmallSerializer(recipes, many=True,
                                      context={'request': request}).data
 
-    def get_recipes_count(self, obj):
-        return obj.recipes.count()
 
 
 class UserSubscribeSerializer(serializers.ModelSerializer):
     """Подписка/отписка от пользователей."""
     class Meta:
         model = Subscription
-        fields = '__all__'
+        fields = ('id', 'user', 'author')
 
 
 class TagSerialiser(serializers.ModelSerializer):
     """Работа с тегами."""
     class Meta:
         model = Tag
-        fields = '__all__'
+        fields = ('id', 'name', 'color', 'slug')
 
 
 class IngredientSerializer(serializers.ModelSerializer):
     """Работа с ингредиентами."""
     class Meta:
         model = Ingredient
-        fields = '__all__'
+        fields = ('id', 'name', 'measurement_unit')
 
 
 class IngredientGetSerializer(serializers.ModelSerializer):
@@ -109,7 +108,7 @@ class RecipeGetSerializer(serializers.ModelSerializer):
                                           source='recipeingredients')
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
-    image = Base64ImageField(required=False)
+    image = Base64ImageField()
 
     class Meta:
         model = Recipe
@@ -117,17 +116,13 @@ class RecipeGetSerializer(serializers.ModelSerializer):
                   'is_favorited', 'is_in_shopping_cart', 'name',
                   'image', 'text', 'cooking_time')
 
-    def get_is_favorited(self, obj):
-        request = self.context['request']
-        return Favorite.objects.filter(
-            user=request.user, recipe=obj
-        ).exists()
+    def get_is_favorited(self, recipe):
+        user = self.context['request'].user
+        return user.favorites.filter(recipe=recipe).exists()
 
-    def get_is_in_shopping_cart(self, obj):
-        request = self.context['request']
-        return ShoppingCart.objects.filter(
-            user=request.user, recipe=obj
-        ).exists()
+    def get_is_in_shopping_cart(self, recipe):
+        user = self.context['request'].user
+        return user.carts.filter(recipe=recipe).exists()
 
 
 class RecipeSmallSerializer(serializers.ModelSerializer):
@@ -167,6 +162,22 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             )
         return data
 
+    @staticmethod
+    def create_ingredients(ingredients, recipe):
+        """Функция добавления ингредиентов при создании/редактировании рецепта."""
+        ingredient_list = []
+        for ingredient in ingredients:
+            current_ingredient = get_object_or_404(
+                Ingredient, id=ingredient.get('id')
+            )
+            amount = ingredient.get('amount')
+            ingredient_list.append(
+                RecipeIngredient(
+                    recipe=recipe, ingredient=current_ingredient, amount=amount
+                )
+            )
+        RecipeIngredient.objects.bulk_create(ingredient_list)
+
     @transaction.atomic
     def create(self, validated_data):
         request = self.context['request']
@@ -174,20 +185,18 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         tags = validated_data.pop('tags')
         recipe = Recipe.objects.create(author=request.user, **validated_data)
         recipe.tags.set(tags)
-        create_ingredients(ingredients, recipe)
+        self.create_ingredients(ingredients, recipe)
         return recipe
 
     @transaction.atomic
-    def update(self, instance, validated_data):
+    def update(self, recipe, validated_data):
         ingredients = validated_data.pop('recipeingredients')
         tags = validated_data.pop('tags')
-        instance.tags.clear()
-        instance.tags.set(tags)
-        RecipeIngredient.objects.filter(recipe=instance).delete()
-        super().update(instance, validated_data)
-        create_ingredients(ingredients, instance)
-        instance.save()
-        return instance
+        recipe.tags.clear()
+        recipe.tags.set(tags)
+        recipe.ingredients.clear()
+        self.create_ingredients(ingredients, recipe)
+        return super().update(recipe, validated_data)
 
     def to_representation(self, instance):
         request = self.context['request']
@@ -200,11 +209,11 @@ class FavoriteSerializer(serializers.ModelSerializer):
     """Работа с избранными рецептами."""
     class Meta:
         model = Favorite
-        fields = '__all__'
+        fields = ('id', 'user', 'recipe')
 
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
     """Работа со списком покупок."""
     class Meta:
         model = ShoppingCart
-        fields = '__all__'
+        fields = ('id', 'user', 'recipe')
