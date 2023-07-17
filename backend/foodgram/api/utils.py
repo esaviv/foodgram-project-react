@@ -4,8 +4,8 @@ from rest_framework.response import Response
 
 
 def add_delete_recipe(request, recipe_id, model, serializer):
-    """Функция добавления и удаления рецепта из избранного или из списка покупок."""
-    if request.method == 'POST': 
+    """Функция добавления и удаления рецепта из избранного и списка покупок."""
+    if request.method == 'POST':
         serializer = serializer(
             data={'user': request.user.id, 'recipe': recipe_id},
             context={'request': request}

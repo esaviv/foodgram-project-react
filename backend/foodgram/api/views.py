@@ -1,7 +1,6 @@
 from django.db.models import Sum
 from django.shortcuts import HttpResponse, get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from djoser.views import UserViewSet
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import (SAFE_METHODS, AllowAny,
@@ -95,12 +94,16 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post', 'delete'])
     def favorite(self, request, pk):
         """Удаление/добавление в избранное."""
-        return add_delete_recipe(request, pk, Favorite, FavoriteSerializer)
+        return add_delete_recipe(
+            request, pk, Favorite, FavoriteSerializer
+        )
 
     @action(detail=True, methods=['post', 'delete'])
     def shopping_cart(self, request, pk):
         """Удаление/добавление в список покупок."""
-        return add_delete_recipe(request, pk, ShoppingCart, ShoppingCartSerializer)
+        return add_delete_recipe(
+            request, pk, ShoppingCart, ShoppingCartSerializer
+        )
 
     @action(detail=False, methods=['get'])
     def download_shopping_cart(self, request):

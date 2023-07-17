@@ -35,7 +35,9 @@ class UserGetSerializer(UserSerializer):
 class UserSubscribeRepresentSerializer(UserGetSerializer):
     """"Предоставление информации о подписках пользователя."""
     recipes = serializers.SerializerMethodField()
-    recipes_count = serializers.IntegerField(source='recipes.count', read_only=True)
+    recipes_count = serializers.IntegerField(
+        source='recipes.count', read_only=True
+    )
 
     class Meta:
         model = User
@@ -52,7 +54,6 @@ class UserSubscribeRepresentSerializer(UserGetSerializer):
         recipes = obj.recipes.all()
         return RecipeSmallSerializer(recipes, many=True,
                                      context={'request': request}).data
-
 
 
 class UserSubscribeSerializer(serializers.ModelSerializer):
@@ -164,7 +165,9 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def create_ingredients(ingredients, recipe):
-        """Функция добавления ингредиентов при создании/редактировании рецепта."""
+        """Функция добавления ингредиентов
+        при создании/редактировании рецепта.
+        """
         ingredient_list = []
         for ingredient in ingredients:
             current_ingredient = get_object_or_404(
