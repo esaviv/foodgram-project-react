@@ -1,20 +1,19 @@
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
+from django.conf import settings
 from django.db import models
 
-from foodgram.settings import (RECIPES_FIELDS_MAX_LENGTH,
-                               SLUG_COLOR_MAX_LENGTH, TIME_AMOUNT)
 from users.models import User
 
 
 class Tag(models.Model):
     name = models.CharField(
-        'Название', max_length=RECIPES_FIELDS_MAX_LENGTH, unique=True
+        'Название', max_length=settings.RECIPES_FIELDS_MAX_LENGTH, unique=True
     )
     color = models.CharField(
-        'Цвет', max_length=SLUG_COLOR_MAX_LENGTH, unique=True
+        'Цвет', max_length=settings.SLUG_COLOR_MAX_LENGTH, unique=True
     )
     slug = models.SlugField(
-        'Слаг', max_length=RECIPES_FIELDS_MAX_LENGTH, unique=True
+        'Слаг', max_length=settings.RECIPES_FIELDS_MAX_LENGTH, unique=True
     )
 
     class Meta:
@@ -27,10 +26,10 @@ class Tag(models.Model):
 
 class Ingredient(models.Model):
     name = models.CharField(
-        'Название', max_length=RECIPES_FIELDS_MAX_LENGTH,
+        'Название', max_length=settings.RECIPES_FIELDS_MAX_LENGTH,
     )
     measurement_unit = models.CharField(
-        'Единица измерения', max_length=RECIPES_FIELDS_MAX_LENGTH,
+        'Единица измерения', max_length=settings.RECIPES_FIELDS_MAX_LENGTH,
     )
 
     class Meta:
@@ -38,7 +37,7 @@ class Ingredient(models.Model):
         verbose_name_plural = 'Ингредиенты'
         constraints = [
             models.UniqueConstraint(
-                fields=['name', 'measurement_unit'],
+                fields=('name', 'measurement_unit'),
                 name='unique_name_measurement_unit'
             )
         ]
@@ -53,7 +52,7 @@ class Recipe(models.Model):
         related_name='recipes', verbose_name='Автор',
     )
     name = models.CharField(
-        'Название', max_length=RECIPES_FIELDS_MAX_LENGTH,
+        'Название', max_length=settings.RECIPES_FIELDS_MAX_LENGTH,
     )
     image = models.ImageField(
         'Картинка', upload_to='recipes/',
@@ -72,14 +71,20 @@ class Recipe(models.Model):
         'Время приготовления',
         validators=[
             MinValueValidator(
-                TIME_AMOUNT,
-                f'Время приготовления должно быть больше {TIME_AMOUNT} минуты.'
+                settings.MIN_TIME_AMOUNT,
+                (f'Время приготовления должно быть '
+                 f'больше {settings.MIN_TIME_AMOUNT} минуты.')
+            ),
+            MaxValueValidator(
+                settings.MAX_TIME_AMOUNT,
+                (f'Время приготовления не должно быть '
+                 f'больше {settings.MAX_TIME_AMOUNT}.')
             )
         ]
     )
 
     class Meta:
-        ordering = ['name']
+        ordering = ('name', )
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
 
@@ -101,8 +106,14 @@ class RecipeIngredient(models.Model):
         'Количество',
         validators=[
             MinValueValidator(
-                TIME_AMOUNT,
-                f'Количество ингредиентов должно быть больше {TIME_AMOUNT}.'
+                settings.MIN_TIME_AMOUNT,
+                (f'Количество ингредиентов должно быть '
+                 f'больше {settings.MIN_TIME_AMOUNT}.')
+            ),
+            MaxValueValidator(
+                settings.MAX_TIME_AMOUNT,
+                (f'Количество ингредиентов не должно быть '
+                 f'больше {settings.MAX_TIME_AMOUNT}.')
             )
         ]
     )
@@ -130,29 +141,26 @@ class BaseUserRecipe(models.Model):
         abstract = True
         constraints = [
             models.UniqueConstraint(
-                fields=['user', 'recipe'],
+                fields=('user', 'recipe'),
                 name='%(app_label)s_%(class)s_unique_relationships'
             )
         ]
 
+    def __str__(self):
+        return f'{self.user} добавил {self.recipe} в {self._meta.verbose_name}'
+
 
 class Favorite(BaseUserRecipe):
     class Meta:
-        ordering = ['recipe']
+        ordering = ('recipe', )
         default_related_name = 'favorites'
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранное'
 
-    def __str__(self):
-        return f'{self.user} добавил {self.recipe} в избраннное'
-
 
 class ShoppingCart(BaseUserRecipe):
     class Meta:
-        ordering = ['user']
+        ordering = ('user', )
         default_related_name = 'carts'
         verbose_name = 'Список покупок'
         verbose_name_plural = 'Списки покупок'
-
-    def __str__(self):
-        return (f'{self.user} добавил {self.recipe} в список покупок')

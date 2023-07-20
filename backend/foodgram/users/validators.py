@@ -1,16 +1,15 @@
 import re
 
 from django.core.exceptions import ValidationError
-
-from foodgram.settings import PROHIBITED_USERNAMES, VALID_CHARACTERS
+from django.conf import settings
 
 
 def validate_username(username):
-    if username.lower() in PROHIBITED_USERNAMES:
+    if username.lower() in settings.PROHIBITED_USERNAMES:
         raise ValidationError(
             'Недопустимое имя пользователя.'
         )
-    if not bool(re.match(VALID_CHARACTERS, username)):
+    if not bool(re.match(settings.VALID_CHARACTERS, username)):
         raise ValidationError(
             'Некорректные символы в имени пользователя.'
         )

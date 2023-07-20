@@ -1,32 +1,32 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-from foodgram.settings import EMAIL_MAX_LENGTH, USER_FIELDS_MAX_LENGTH
+from django.conf import settings
 from users.validators import validate_username
 
 
 class User(AbstractUser):
     email = models.EmailField(
         'Электронная почта',
-        max_length=EMAIL_MAX_LENGTH, unique=True
+        max_length=settings.EMAIL_MAX_LENGTH, unique=True
     )
     username = models.CharField(
         'Имя пользователя',
-        max_length=USER_FIELDS_MAX_LENGTH, unique=True,
+        max_length=settings.USER_FIELDS_MAX_LENGTH, unique=True,
         validators=[validate_username, ]
     )
     first_name = models.CharField(
-        'Имя', max_length=USER_FIELDS_MAX_LENGTH
+        'Имя', max_length=settings.USER_FIELDS_MAX_LENGTH
     )
     last_name = models.CharField(
-        'Фамилия', max_length=USER_FIELDS_MAX_LENGTH
+        'Фамилия', max_length=settings.USER_FIELDS_MAX_LENGTH
     )
     password = models.CharField(
-        'Пароль', max_length=USER_FIELDS_MAX_LENGTH
+        'Пароль', max_length=settings.USER_FIELDS_MAX_LENGTH
     )
 
     class Meta:
-        ordering = ['username']
+        ordering = ('username', )
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
 
@@ -47,7 +47,7 @@ class Subscription(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=['user', 'author'],
+                fields=('user', 'author'),
                 name='unique_user_author'
             ),
             models.CheckConstraint(
