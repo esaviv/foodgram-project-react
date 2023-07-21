@@ -150,36 +150,36 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                   'name', 'text', 'cooking_time')
 
     def validate(self, data):
-        ingredients_list = []
+        ingredients = []
         for ingredient in data.get('recipeingredients'):
             if ingredient.get('amount') <= 0:
                 raise serializers.ValidationError(
                     'Количество не может быть меньше 1'
                 )
-            ingredients_list.append(ingredient.get('id'))
-        if len(set(ingredients_list)) != len(ingredients_list):
+            ingredients.append(ingredient.get('id'))
+        if len(set(ingredients)) != len(ingredients):
             raise serializers.ValidationError(
                 'Вы пытаетесь добавить в рецепт два одинаковых ингредиента'
             )
         return data
 
     @staticmethod
-    def create_ingredients(ingredients, recipe):
+    def create_ingredients(new_ingredients, recipe):
         """Функция добавления ингредиентов
         при создании/редактировании рецепта.
         """
-        ingredient_list = []
-        for ingredient in ingredients:
+        ingredients = []
+        for ingredient in new_ingredients:
             current_ingredient = get_object_or_404(
                 Ingredient, id=ingredient.get('id')
             )
             amount = ingredient.get('amount')
-            ingredient_list.append(
+            ingredients.append(
                 RecipeIngredient(
                     recipe=recipe, ingredient=current_ingredient, amount=amount
                 )
             )
-        RecipeIngredient.objects.bulk_create(ingredient_list)
+        RecipeIngredient.objects.bulk_create(ingredients)
 
     @transaction.atomic
     def create(self, validated_data):
