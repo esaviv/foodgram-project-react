@@ -9,26 +9,29 @@ from rest_framework.permissions import (SAFE_METHODS, AllowAny,
 from rest_framework.response import Response
 
 from api.filters import IngredientFilter, RecipeFilter
+from api.pagination import PageLimitPagination
 from api.permissions import IsOwnerOrReadOnly
 from api.serializers import (FavoriteSerializer, IngredientSerializer,
                              RecipeCreateSerializer, RecipeGetSerializer,
                              ShoppingCartSerializer, TagSerialiser,
                              UserSubscribeRepresentSerializer,
                              UserSubscribeSerializer)
-from api.utils import add_delete_recipe
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                             ShoppingCart, Tag)
 from users.models import Subscription, User
 
 
 class UserSubscribeView(UserViewSet):
+    pagination_class = PageLimitPagination
+
     @action(detail=False)
     def subscriptions(self, request):
         queryset = User.objects.filter(following__user=request.user)
+        paginated_queryset = self.paginate_queryset(queryset)
         serializer = UserSubscribeRepresentSerializer(
-            queryset, context={'request': request}, many=True
+            paginated_queryset, context={'request': request}, many=True
         )
-        return Response(serializer.data)
+        return self.get_paginated_response(serializer.data)
 
     @action(detail=True, methods=['post'], url_path='subscribe')
     def subscribe(self, request, id):
@@ -53,16 +56,6 @@ class UserSubscribeView(UserViewSet):
             )
         Subscription.objects.get(user=request.user.id, author=id).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-# class UserSubscriptionsViewSet(
-#     mixins.ListModelMixin, viewsets.GenericViewSet
-# ):
-#     """Получение списка всех подписок на пользователей."""
-#     serializer_class = UserSubscribeRepresentSerializer
-
-#     def get_queryset(self):
-#         return User.objects.filter(following__user=self.request.user)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -100,17 +93,30 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return RecipeGetSerializer
         return RecipeCreateSerializer
 
+    def create_or_delete(self, request, id, model, serializer):
+        if request.method == 'POST':
+            serializer = serializer(
+                data={'user': request.user.id, 'recipe': id},
+                context={'request': request}
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        recipe = get_object_or_404(model, user=request.user, recipe=id)
+        recipe.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
     @action(detail=True, methods=['post', 'delete'])
     def favorite(self, request, pk):
         """Удаление/добавление в избранное."""
-        return add_delete_recipe(
+        return self.create_or_delete(
             request, pk, Favorite, FavoriteSerializer
         )
 
     @action(detail=True, methods=['post', 'delete'])
     def shopping_cart(self, request, pk):
         """Удаление/добавление в список покупок."""
-        return add_delete_recipe(
+        return self.create_or_delete(
             request, pk, ShoppingCart, ShoppingCartSerializer
         )
 
