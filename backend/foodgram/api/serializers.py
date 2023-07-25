@@ -1,24 +1,16 @@
 
 from django.db import transaction
 from django.shortcuts import get_object_or_404
-from djoser.serializers import UserCreateSerializer, UserSerializer
+from djoser.serializers import UserSerializer
 from drf_base64.fields import Base64ImageField
-from rest_framework import serializers
+from rest_framework import validators, serializers
 
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                             ShoppingCart, Tag)
 from users.models import Subscription, User
 
 
-class UserSignUpSerializer(UserCreateSerializer):
-    """Регистрации пользователей."""
-    class Meta:
-        model = User
-        fields = ('email', 'id', 'username', 'first_name',
-                  'last_name', 'password')
-
-
-class UserGetSerializer(UserSerializer):
+class UserSerializer(UserSerializer):
     """Информацией о пользователях."""
     is_subscribed = serializers.SerializerMethodField()
 
@@ -32,7 +24,7 @@ class UserGetSerializer(UserSerializer):
         return user.follower.filter(author=author).exists()
 
 
-class UserSubscribeRepresentSerializer(UserGetSerializer):
+class UserSubscribeRepresentSerializer(UserSerializer):
     """"Предоставление информации о подписках пользователя."""
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.IntegerField(
@@ -62,6 +54,14 @@ class UserSubscribeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subscription
         fields = ('id', 'user', 'author')
+
+        validators = [
+            validators.UniqueTogetherValidator(
+                queryset=Subscription.objects.all(),
+                fields=('user', 'author'),
+                message='Вы уже подписаны на этого пользователя'
+            )
+        ]
 
 
 class TagSerialiser(serializers.ModelSerializer):
@@ -105,7 +105,7 @@ class IngredientPostSerializer(serializers.ModelSerializer):
 class RecipeGetSerializer(serializers.ModelSerializer):
     """Получение информации о рецепте."""
     tags = TagSerialiser(many=True, read_only=True)
-    author = UserGetSerializer(read_only=True)
+    author = UserSerializer(read_only=True)
     ingredients = IngredientGetSerializer(many=True, read_only=True,
                                           source='recipeingredients')
     is_favorited = serializers.SerializerMethodField()
@@ -215,9 +215,25 @@ class FavoriteSerializer(serializers.ModelSerializer):
         model = Favorite
         fields = ('id', 'user', 'recipe')
 
+        validators = [
+            validators.UniqueTogetherValidator(
+                queryset=Favorite.objects.all(),
+                fields=('user', 'recipe'),
+                message='Рецепт уже добавлен в избранное'
+            )
+        ]
+
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
     """Работа со списком покупок."""
     class Meta:
         model = ShoppingCart
         fields = ('id', 'user', 'recipe')
+
+        validators = [
+            validators.UniqueTogetherValidator(
+                queryset=ShoppingCart.objects.all(),
+                fields=('user', 'recipe'),
+                message='Рецепт уже добавлен в список покупок'
+            )
+        ]

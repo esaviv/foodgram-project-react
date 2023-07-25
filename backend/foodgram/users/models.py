@@ -6,6 +6,9 @@ from users.validators import validate_username
 
 
 class User(AbstractUser):
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ('username', 'first_name', 'last_name')
+
     email = models.EmailField(
         'Электронная почта',
         max_length=settings.EMAIL_MAX_LENGTH, unique=True
