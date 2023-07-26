@@ -1,8 +1,8 @@
 from django.db.models import Sum
 from django.shortcuts import HttpResponse, get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+from djoser.serializers import SetPasswordSerializer, UserCreateSerializer
 from djoser.views import UserViewSet as DjoserUserViewSet
-from djoser.serializers import UserCreateSerializer, SetPasswordSerializer
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import (SAFE_METHODS, AllowAny,
