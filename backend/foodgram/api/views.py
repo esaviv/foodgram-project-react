@@ -2,7 +2,7 @@ from django.db.models import Sum
 from django.shortcuts import HttpResponse, get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet as DjoserUserViewSet
-from djoser.serializers import UserCreateSerializer
+from djoser.serializers import UserCreateSerializer, SetPasswordSerializer
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import (SAFE_METHODS, AllowAny,
@@ -26,7 +26,9 @@ class UserViewSet(DjoserUserViewSet):
     pagination_class = PageLimitPagination
 
     def get_serializer_class(self):
-        if self.request.method == 'POST':
+        if self.action == 'set_password':
+            return SetPasswordSerializer
+        elif self.request.method == 'POST':
             return UserCreateSerializer
         return UserSerializer
 
