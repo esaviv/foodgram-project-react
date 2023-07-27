@@ -4,7 +4,7 @@
 ### Технологии
 Django==3.2 | djangorestframework==3.12.4 | python-dotenv==1.0.0 | djoser==2.2.0 | pillow==10.0.0 | gunicorn==20.0.4
 
-http://sweet-pepper.hopto.org | admin | 1234
+http://sweet-dish.hopto.org | admin@ya.ru | 1234
 
 ## Локальный запуск проекта:
 Клонировать репозиторий и перейти в него в командной строке:
