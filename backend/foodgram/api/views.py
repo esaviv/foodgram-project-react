@@ -1,7 +1,6 @@
 from django.db.models import Sum
 from django.shortcuts import HttpResponse, get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from djoser.serializers import SetPasswordSerializer, UserCreateSerializer
 from djoser.views import UserViewSet as DjoserUserViewSet
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -15,7 +14,7 @@ from api.permissions import IsOwnerOrReadOnly
 from api.serializers import (FavoriteSerializer, IngredientSerializer,
                              RecipeCreateSerializer, RecipeGetSerializer,
                              ShoppingCartSerializer, TagSerialiser,
-                             UserSerializer, UserSubscribeRepresentSerializer,
+                             UserSubscribeRepresentSerializer,
                              UserSubscribeSerializer)
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
                             ShoppingCart, Tag)
@@ -24,13 +23,6 @@ from users.models import Subscription, User
 
 class UserViewSet(DjoserUserViewSet):
     pagination_class = PageLimitPagination
-
-    def get_serializer_class(self):
-        if self.action == 'set_password':
-            return SetPasswordSerializer
-        elif self.request.method == 'POST':
-            return UserCreateSerializer
-        return UserSerializer
 
     @action(detail=False)
     def subscriptions(self, request):
@@ -55,14 +47,10 @@ class UserViewSet(DjoserUserViewSet):
     @subscribe.mapping.delete
     def unsubscribe(self, request, id=None):
         author = get_object_or_404(User, id=id)
-        if not Subscription.objects.filter(
-            user=request.user, author=author
-        ).exists():
-            return Response(
-                {'errors': 'Вы не подписаны на этого пользователя'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        Subscription.objects.get(user=request.user.id, author=id).delete()
+        subscription = get_object_or_404(
+            Subscription, user=request.user, author=author
+        )
+        subscription.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 

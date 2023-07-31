@@ -139,6 +139,7 @@ class BaseUserRecipe(models.Model):
 
     class Meta:
         abstract = True
+        ordering = ('user', )
         constraints = [
             models.UniqueConstraint(
                 fields=('user', 'recipe'),
@@ -152,7 +153,6 @@ class BaseUserRecipe(models.Model):
 
 class Favorite(BaseUserRecipe):
     class Meta:
-        ordering = ('recipe', )
         default_related_name = 'favorites'
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранное'
@@ -160,7 +160,6 @@ class Favorite(BaseUserRecipe):
 
 class ShoppingCart(BaseUserRecipe):
     class Meta:
-        ordering = ('user', )
         default_related_name = 'carts'
         verbose_name = 'Список покупок'
         verbose_name_plural = 'Списки покупок'
