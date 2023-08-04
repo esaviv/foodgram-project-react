@@ -10,7 +10,9 @@ def validate_username(username):
             'Недопустимое имя пользователя.'
         )
     if not bool(re.match(settings.VALID_CHARACTERS, username)):
+        invalid_chars = re.sub(settings.VALID_CHARS, '', username)
         raise ValidationError(
-            'Некорректные символы в имени пользователя.'
+            f'Некорректные символы в имени пользователя:'
+            f' {", ".join(invalid_chars)}'
         )
     return username
