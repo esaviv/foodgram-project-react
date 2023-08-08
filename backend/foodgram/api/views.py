@@ -21,7 +21,7 @@ from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
 from users.models import Subscription, User
 
 
-class UserViewSet(DjoserUserViewSet, AddRemoveMixin):
+class UserViewSet(AddRemoveMixin, DjoserUserViewSet):
     pagination_class = PageLimitPagination
 
     @action(detail=False)
@@ -41,8 +41,7 @@ class UserViewSet(DjoserUserViewSet, AddRemoveMixin):
 
     @subscribe.mapping.delete
     def unsubscribe(self, request, id=None):
-        author = get_object_or_404(User, id=id)
-        data = {'user': request.user.id, 'author': author.id}
+        data = {'user': request.user.id, 'author': id}
         return self.remove(Subscription, data)
 
 
@@ -81,22 +80,26 @@ class RecipeViewSet(viewsets.ModelViewSet, AddRemoveMixin):
             return RecipeGetSerializer
         return RecipeCreateSerializer
 
-    @action(detail=True, methods=['post', 'delete'])
-    def favorite(self, request, pk):
-        """Удаление/добавление в избранное."""
+    @action(detail=True, methods=['post'], url_path='favorite')
+    def add_favorites(self, request, pk):
         recipe = get_object_or_404(Recipe, id=pk)
         data = {'user': request.user.id, 'recipe': recipe.pk}
-        if request.method == 'POST':
-            return self.add(request, FavoriteSerializer, data)
+        return self.add(request, FavoriteSerializer, data)
+
+    @add_favorites.mapping.delete
+    def remove_favorites(self, request, pk=None):
+        data = {'user': request.user.id, 'recipe': pk}
         return self.remove(Favorite, data)
 
-    @action(detail=True, methods=['post', 'delete'])
-    def shopping_cart(self, request, pk):
-        """Удаление/добавление в список покупок."""
+    @action(detail=True, methods=['post'], url_path='shopping_cart')
+    def add_cart(self, request, pk):
         recipe = get_object_or_404(Recipe, id=pk)
         data = {'user': request.user.id, 'recipe': recipe.pk}
-        if request.method == 'POST':
-            return self.add(request, ShoppingCartSerializer, data)
+        return self.add(request, ShoppingCartSerializer, data)
+
+    @add_cart.mapping.delete
+    def remove_cart(self, request, pk=None):
+        data = {'user': request.user.id, 'recipe': pk}
         return self.remove(ShoppingCart, data)
 
     @action(detail=False, methods=['get'])

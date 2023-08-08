@@ -139,7 +139,7 @@ class BaseUserRecipe(models.Model):
 
     class Meta:
         abstract = True
-        ordering = ('user', )
+        ordering = ('user')
         constraints = [
             models.UniqueConstraint(
                 fields=('user', 'recipe'),

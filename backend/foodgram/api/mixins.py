@@ -4,8 +4,8 @@ from rest_framework.response import Response
 
 
 class AddRemoveMixin:
-    def add(self, request, serializer, data):
-        serializer = serializer(
+    def add(self, request, serializer_class, data):
+        serializer = serializer_class(
             data=data,
             context={'request': request}
         )
